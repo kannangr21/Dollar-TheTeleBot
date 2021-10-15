@@ -8,20 +8,3 @@ def get_database():
     db = client['test']
 # This is added so that many files can reuse the function get_database()
     return db
-   
-   
-   
-   
-   
-   
-    '''dbname = get_database()
-collection = dbname['userevents']
-item_1 = {
-"_id" : "01",
-"user_name" : "Kannan",
-"event" : "Chennai",
-"expense" : 5000,
-"date" : "12/10/2021"
-}
-collection.insert(item_1)
-'''
