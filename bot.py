@@ -12,11 +12,12 @@ users_collection = db['Users']
 """
 Commands :
 -------------------- 
-start - Dollar knows about you
-help - To help you
-newplan - To add a plan with an estimated amount
-viewplans - To view all the plans
+start - Dollar knows about you.
+help - To help you.
+newplan - To add a plan with an estimated amount.
+viewplans - To view all the plans.
 plan - To view a particular plan.
+delplan - To delete a plan.
 """
 
 @bot.message_handler(commands=["start"])
@@ -48,6 +49,11 @@ def newplan(message):
         ))
     desc, code, amt = None, None, 0
     for element in msg:
+        if element[0] == "c":
+            try:
+                code = element.split("c ",1)[1]
+            except:
+                code = element.split("c",1)[1]
         if element[0] == "d":
             try:
                 desc = element.split("d ",1)[1]
@@ -58,11 +64,6 @@ def newplan(message):
                 amt = float(element.split("a ",1)[1])
             except:
                 amt = float(element.split("a",1)[1])
-        if element[0] == "c":
-            try:
-                code = element.split("c ",1)[1]
-            except:
-                code = element.split("c",1)[1]
     if amt == 0:
         return bot.reply_to(message, (
         "Estimated Amount not added! Please use -a flag to add amount."
@@ -103,7 +104,7 @@ def getOnePlan(message):
     try:
         code = message.text.split("/plan ")[1]
     except:
-        return bot.reply_to(message, "Use /plan {code} to view about the plan")
+        return bot.reply_to(message, "Use /plan {code} to view about the plan.\nUse /viewplans to get the codes.")
     plans = users_collection.find_one({"_id" : message.from_user.id},{"_id" : 0, "plans" : 1})
     plans = plans["plans"]
     for plan in plans:
@@ -117,5 +118,29 @@ def getOnePlan(message):
                     f"Estimated amount - {plan['amt']}")        
             return bot.reply_to(message, retMsg)
     return bot.reply_to(message, "No such event is found!\nTry /viewplans to get the code or use /newplan to create a plan.")
+
+@bot.message_handler(commands=["delplan"] )
+def deletePlan(message):
+    try:
+        code = message.text.split("/delplan ")[1]
+    except:
+        return bot.reply_to(message, f"Hey {message.from_user.first_name}, Try using /delplan "+"{shortcode} to delete a plan!")
+    plans = users_collection.find_one({"_id" : message.from_user.id},{"_id" : 0, "plans" : 1})
+    plans,i = plans["plans"], 0
+    for plan in plans:
+        if plan["code"] == code:
+            plan = plans.pop(i)
+            users_collection.update_one({"_id": message.from_user.id},{"$set":{"plans":plans}})
+            desc = "" 
+            if plan['desc'] != None:
+                desc = f"Description - {plan['desc']}\n"
+            retMsg = (f"Code - {plan['code']}\n"
+                    f"Plan - {plan['plan']}\n"
+                    +desc+
+                    f"Estimated amount - {plan['amt']}\n"
+                    "The above plan has been deleted successfully.")        
+            return bot.reply_to(message, retMsg)
+        i += 1
+    return bot.reply_to(message, "No such plan found!\nTry /viewplans to get your plans.")
 
 bot.polling()
