@@ -18,12 +18,14 @@ newplan - To add a plan with an estimated amount.
 viewplans - To view all the plans.
 plan - To view a particular plan.
 delplan - To delete a plan.
+exp - To add an expense out of planned event.
+viewexp - To view all the expenses out of the plan.
 """
 
 @bot.message_handler(commands=["start"])
 def startMsg(message):
     try:
-        users_collection.insert_one({"_id": message.from_user.id, "plans":[]})
+        users_collection.insert_one({"_id": message.from_user.id, "plans":[], "expenses":[]})
     except Exception:
         return bot.reply_to(message, f"""Hello {message.from_user.first_name}! You know me already! Use /help to know me more""")
     return bot.reply_to(message,f"""Hello {message.from_user.first_name}! My name is Dollar, Your virtual pocket diary.\nI can maintain your expenses and calculate your expenses.\nI can help you\nI'm Testing my bot""")
@@ -75,8 +77,9 @@ def newplan(message):
     plans = plans["plans"]
     for plan in plans:
         if plan["code"] == code:
-            return bot.reply_to(message, (f"Hey! It seems like you've already added `{code}` as the short code for {plan['plan']}.\n"
-                                            "Try adding another code for the same plan!"))
+            return bot.reply_to(message, (
+                f"Hey! It seems like you've already added `{code}` as the short code for {plan['plan']}.\n"
+                "Try adding another code for the same plan!"))
     data = {
         "code": code, 
         "plan": newPlan,
@@ -119,7 +122,7 @@ def getOnePlan(message):
             return bot.reply_to(message, retMsg)
     return bot.reply_to(message, "No such event is found!\nTry /viewplans to get the code or use /newplan to create a plan.")
 
-@bot.message_handler(commands=["delplan"] )
+@bot.message_handler(commands=["delplan"])
 def deletePlan(message):
     try:
         code = message.text.split("/delplan ")[1]
@@ -142,5 +145,41 @@ def deletePlan(message):
             return bot.reply_to(message, retMsg)
         i += 1
     return bot.reply_to(message, "No such plan found!\nTry /viewplans to get your plans.")
+
+@bot.message_handler(commands = ["exp"])
+def addExpense(message):
+    if message.text == "/exp":
+        return bot.reply_to(message, "To add an expense try the format,\n`/exp {detail} -a {amount}`\n"
+                                        "To add an expense to the existing plan, try `/expplan`")
+    try:
+        msg = message.text.split("/exp ")[1]
+    except:
+        return bot.reply_to(message, (f"Hello {message.from_user.first_name}!\nTo add an expense try the format,\n`/exp"+" {detail} -a {amount}`\n"
+                                        "To add an expense to the existing plan, try `/expplan`"))
+    try:
+        msg = msg.split(" -a ")
+        desc = msg[0]
+        amt = float(msg[1])
+    except:
+        return bot.reply_to(message, (f"Hello {message.from_user.first_name}!\nTo add an expense, try the format,\n`/exp"
+                                       " {detail} -a {amount}`\n"))
+    data = {
+        "desc" : desc,
+        "amt" : amt
+    }
+    users_collection.update_one({"_id": message.from_user.id}, {"$push":{"expenses": data}})
+    return bot.reply_to(message, f"Your expense {desc} has been added.\nAnd the expense is {amt}")
+
+@bot.message_handler(commands = ["viewexp"])
+def getExpenses(message):
+    expenses = users_collection.find_one({"_id" : message.from_user.id},{"_id" : 0,"expenses" : 1})
+    expenses = expenses["expenses"]
+    if expenses == []:
+        return bot.reply_to(message, f"Hey {message.from_user.first_name}, You haven't added any expense. Use `/exp` to add an expense.")
+    retMsg = "Your expenses are,\n"
+    for expense in expenses:
+        retMsg += (expense["desc"] + " - " + str(expense["amt"]) + "\n")
+    return bot.reply_to(message, retMsg)
+    
 
 bot.polling()
