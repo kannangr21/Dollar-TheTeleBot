@@ -175,7 +175,7 @@ def getExpenses(message):
     expenses = users_collection.find_one({"_id" : message.from_user.id},{"_id" : 0,"expenses" : 1})
     expenses = expenses["expenses"]
     if expenses == []:
-        return bot.reply_to(message, f"Hey {message.from_user.first_name}, You haven't added any expense. Use `/exp` to add an expense.")
+        return bot.reply_to(message, f"Hey {message.from_user.first_name}, You haven't added any expense. Use `/exp` to add an expense that is not in a plan.")
     retMsg = "Your expenses are,\n"
     for expense in expenses:
         retMsg += (expense["desc"] + " - " + str(expense["amt"]) + "\n")
