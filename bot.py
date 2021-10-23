@@ -16,7 +16,7 @@ start - Dollar knows about you.
 help - To help you.
 newplan - To add a plan with an estimated amount.
 viewplans - To view all the plans.
-expplan - To add an expense under a plan
+expplan - To add an expense under a plan.
 plan - To view a particular plan.
 delplan - To delete a plan.
 exp - To add an expense out of planned event.
@@ -31,14 +31,53 @@ def startMsg(message):
     try:
         users_collection.insert_one({"_id": message.from_user.id, "plans":[], "expenses":[]})
     except Exception:
-        return bot.reply_to(message, f"""Hello {message.from_user.first_name}! You know me already! Use /help to know me more""")
-    return bot.reply_to(message,f"""Hello {message.from_user.first_name}! My name is Dollar, Your virtual pocket diary.\nI can maintain your expenses and calculate your expenses.\nI can help you\nI'm Testing my bot""")
+        return bot.reply_to(message, (f"Hello {message.from_user.first_name},\n" 
+                                      "You know me already! Use /help to know me more"))
+    return bot.reply_to(message,(f"Hello {message.from_user.first_name} 👋!\n" 
+                                "My name is Dollar💸, Your virtual pocket diary.\n"
+                                "I can maintain and calculate your expenses.\n"
+                                "Use /help to know more about me."))
 
 # -------------- /help ------------------------
 
 @bot.message_handler(commands = ["help"])
 def help(message):
-    bot.reply_to(message,"Hello! I'm Growing")
+    bot.reply_to(message,(
+        "User guide to use *Dollar* 💸, your virtual pocket dairy to plan and maintain the expenses.\n"
+        "\n*What's my work???*\n"
+        "\n1️⃣ I can remember your plans."
+        "\n2️⃣ I can remember the amount you've spent under any plan."
+        "\n3️⃣ You can even tell me the expenses outside of a plan."
+        "\n\n*How to use me???*"
+        "\n\n_---Plans and Expenses---_"
+        "\n1️⃣ /newplan - To *create* a new plan with a budget.\n"
+        "Format to use: `/newplan {Plan name} -c {plan code} -d {Optional description} -a {budget}`"
+        "\n2️⃣ /viewplans - To *view* the plans and plan code.\n"
+        "Format to use: `/viewplans`"
+        "\n3️⃣ /expplan - To *add* an expense under a plan, this will be calculated from estimated budget.\n"
+        "Format to use: `/expplan {plan code} -e {expense} -a {amount}`"
+        "\n4️⃣ /plan - To view a plan in *detail* with expenses.\n"
+        "Format to use: `/plan {plan code}`"
+        "\n5️⃣ /delplan - To *delete* a plan and all the details related to a plan.\n"
+        "Format to use: `/delplan {plan code}`\n\n"
+        "_---Expenses out of plan---_"
+        "\n1️⃣ /exp - To *add* an expense that is not in a plan.\n"
+        "Format to use: `/exp {expense} -a {amount}`"
+        "\n2️⃣ /viewexp - To *view* all the expenses out of any plan.\n"
+        "Format to use: `/viewexp`"
+        "\n3️⃣ /delexp - To *delete* a particular expense from the list.\n"
+        "Format to use: `/delexp {exp number}`\n\n"
+        "_---codes---_\n"
+        "`Plan name`: Name given to a plan, _can be a title_\n"
+        "`Plan code`: A short code defined by you while adding a plan, _can be one or two letters_.\n"
+        "`Description` (Optional): About the plan in detail, _can be long sentences_.\n"
+        "`Budget`: Estimated amount for the plan.\n"
+        "`Expense`: Expense title.\n"
+        "`Amount`: Amount spent.\n"
+        "`ExpNumber`: Expense number.(used to delete expense)\n"
+        "\n*Contact my developer:*\n"
+        "[Kannan G R](https://t.me/kannangr21)"
+), parse_mode = "MarkDown")
 
 # -------------- /newplan ------------------------
 
@@ -48,16 +87,11 @@ def newplan(message):
     try:
         msg = msg[1].split(' -')
     except IndexError:
-        return bot.reply_to(message, """Please use the format\n```/newplan {plan name} -c {keyword for the plan (2 letters recommended)} -d {optional description} -a {Amount}```""")
+        return bot.reply_to(message, ("Please use the format,"
+        "\n`/newplan {plan name} -c {keyword for the plan (2 letters recommended)} -d {optional description} -a {Amount}`"), 
+        parse_mode = "MarkDown")
     newPlan = msg.pop(0)
-    if newPlan == "":
-        return bot.reply_to(message, (
-        "Plan name not added!"
-        "\nTry using,"
-        "\n```/newplan {Plan name} -c {keyword for the plan (2 letters recommended)} -d {optional description} -a {amount in numbers}```"
-        "\n/// Remember to add spaces before flags ' -c', ' -d' and ' -a'///"
-        ))
-    desc, code, amt = None, None, 0
+    desc, code, amt = None, "", 0
     for element in msg:
         if element[0] == "c":
             try:
@@ -74,7 +108,7 @@ def newplan(message):
                 amt = float(element.split("a ",1)[1])
             except:
                 amt = float(element.split("a",1)[1])
-    if amt == 0:
+    if amt == 0 or code == "":
         return bot.reply_to(message, (
         "Estimated Amount not added! Please use -a flag to add amount."
         "\nTry using,"
@@ -152,7 +186,7 @@ def addExpPlan(message):
     try:
         msg = message.text.split("/expplan ")[1]
     except:
-        return bot.reply_to(message, "Hey there, To add an expense use \n`/expplan {plan code} -e {expense} -a  {amount}`")
+        return bot.reply_to(message, "Hey there, To add an expense use \n`/expplan {plan code} -e {expense} -a {amount}`")
     msg = msg.split(" -")
     code = msg.pop(0)
     plans = users_collection.find_one({"_id" : message.from_user.id},{"_id" : 0, "plans" : 1})
@@ -274,4 +308,4 @@ def delExpense(message):
     except:
         return bot.reply_to(message, "No expense found!\nTry using /viewexp to get the expense number.")
  
-bot.polling()
+bot.infinity_polling()
