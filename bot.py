@@ -170,7 +170,8 @@ def newplan(message):
             "expenses" : []
             }
         users_collection.update_one({"_id": message.from_user.id},{"$push":{"plans":data}})
-        return bot.reply_to(message,f"*{newPlan}* - Plan added successfully with an estimated expense of *{amt}*",parse_mode = "MarkDown")
+        return bot.reply_to(message,f"*{newPlan}* - Plan added successfully with an estimated expense of *{amt}*",
+                            parse_mode = "MarkDown")
     except:
         return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
                                     "Trying /reset might help.\n"
@@ -197,7 +198,7 @@ def getPlans(message):
                                     "Trying /reset might help.\n"
                                     "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
                                     parse_mode = "MarkDown")
-                                    
+
 # -------------- /plan ------------------------
 
 @bot.message_handler(commands = ["plan"])
