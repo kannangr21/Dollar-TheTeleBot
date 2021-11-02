@@ -14,6 +14,7 @@ Commands :
 -------------------- 
 start - Dollar knows about you.
 help - To help you.
+reset - Reset all the lists.
 newplan - To add a plan with an estimated amount.
 viewplans - To view all the plans.
 expplan - To add an expense under a plan.
@@ -21,7 +22,10 @@ plan - To view a particular plan.
 delplan - To delete a plan.
 exp - To add an expense out of planned event.
 viewexp - To view all the expenses out of the plan.
-delexp - To delete an expense
+delexp - To delete an expense.
+note - To add a note.
+viewnotes - To see the notes list.
+delnote - To delete a note.
 """
 
 # -------------- /start ------------------------
@@ -30,16 +34,31 @@ delexp - To delete an expense
 def startMsg(message):
     try:
         try:
-            users_collection.insert_one({"_id": message.from_user.id, "plans":[], "expenses":[]})
+            users_collection.insert_one({"_id": message.from_user.id, "plans":[], "expenses":[], "notes":[]})
         except Exception:
             return bot.reply_to(message, (f"Hello {message.from_user.first_name},\n" 
                                         "You know me already! Use /help to know me more"))
         return bot.reply_to(message,(f"Hello {message.from_user.first_name} 👋!\n" 
                                     "My name is Dollar💸, Your virtual pocket diary.\n"
                                     "I can maintain and calculate your expenses.\n"
+                                    "Also, I can hold your notes in my memory🧠.\n"
                                     "Use /help to know more about me."))
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
+
+# -------------- /reset --------------------------
+
+@bot.message_handler(commands = ["reset"])
+def resetData(message):
+    try:
+        users_collection.update_one({"_id": message.from_user.id}, {"$set":{"plans":[], "expenses":[], "notes":[]}}, upsert = True)
+        return bot.reply_to(message, "Everything is reset. All your lists are empty now.")
+    except:
+        return bot.reply_to(message, "Sorry for the inconvenience, Something is not good in me.")
+
 # -------------- /help ------------------------
 
 @bot.message_handler(commands = ["help"])
@@ -51,6 +70,7 @@ def help(message):
             "\n1️⃣ I can remember your plans."
             "\n2️⃣ I can remember the amount you've spent under any plan."
             "\n3️⃣ You can even tell me the expenses outside of a plan."
+            "\n4️⃣ I have a good memory power to remember your notes."
             "\n\n*How to use me???*"
             "\n\n_---Plans and Expenses---_"
             "\n1️⃣ /newplan - To *create* a new plan with a budget.\n"
@@ -70,7 +90,14 @@ def help(message):
             "Format to use: `/viewexp`"
             "\n3️⃣ /delexp - To *delete* a particular expense from the list.\n"
             "Format to use: `/delexp {exp number}`\n\n"
-            "_---codes---_\n"
+            "_---Notes---_"
+            "\n1️⃣ /note - To *add* a note.\n"
+            "Format to use: `/note {detail}`"
+            "\n2️⃣ /viewnotes - To *view* all the notes.\n"
+            "Format to use: `/viewnotes`"
+            "\n3️⃣ /delnote - To *delete* a note\n"
+            "Format to use: `/delnote {note number}`\n\n"
+            "_---Codes---_\n"
             "`Plan name`: Name given to a plan, _can be a title_\n"
             "`Plan code`: A short code defined by you while adding a plan, _can be one or two letters_.\n"
             "`Description` (Optional): About the plan in detail, _can be long sentences_.\n"
@@ -78,11 +105,17 @@ def help(message):
             "`Expense`: Expense title.\n"
             "`Amount`: Amount spent.\n"
             "`ExpNumber`: Expense number.(used to delete expense)\n"
+            "\n_---Resetting---_\n"
+            "/reset - To reset all the data.\n"
+            "This will erase all plans, expenses, notes.\n"
             "\n*Contact my developer:*\n"
             "[Kannan G R](https://t.me/kannangr21)"
             ), parse_mode = "MarkDown")
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
 
 # -------------- /newplan ------------------------
 
@@ -139,7 +172,11 @@ def newplan(message):
         users_collection.update_one({"_id": message.from_user.id},{"$push":{"plans":data}})
         return bot.reply_to(message,f"*{newPlan}* - Plan added successfully with an estimated expense of *{amt}*",parse_mode = "MarkDown")
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
+
 # -------------- /viewplans ------------------------
 
 @bot.message_handler(commands = ["viewplans"])
@@ -156,8 +193,11 @@ def getPlans(message):
             i += 1
         return bot.reply_to(message, retmsg, parse_mode="MarkDown")
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
-
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
+                                    
 # -------------- /plan ------------------------
 
 @bot.message_handler(commands = ["plan"])
@@ -192,7 +232,10 @@ def getOnePlan(message):
                 return bot.reply_to(message, retMsg, parse_mode = "MarkDown")
         return bot.reply_to(message, "No such event is found!\nTry /viewplans to get the code or use /newplan to create a plan.")
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
 
 # -------------- /expplan ------------------------
 
@@ -246,10 +289,11 @@ def addExpPlan(message):
             return bot.reply_to(message, (f"No plan named as *{code}* found!"
                                         "\nUse /viewplans to know the codes."), parse_mode = "MarkDown")    
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))        
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")        
     
-
-
 # -------------- /delplan ------------------------
 
 @bot.message_handler(commands = ["delplan"])
@@ -279,7 +323,10 @@ def deletePlan(message):
             i += 1
         return bot.reply_to(message, "No such plan found!\nTry /viewplans to get your plans.")
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
 
 # -------------- /exp ------------------------
 
@@ -312,7 +359,10 @@ def addExpense(message):
         return bot.reply_to(message, f"Your expense *{desc}* has been added.\nAnd the amount is *{amt}*",
                         parse_mode = "MarkDown")
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
 
 # -------------- /viewexp ------------------------
 
@@ -333,7 +383,10 @@ def getExpenses(message):
         retMsg += f"\n*Total : {total}*"
         return bot.reply_to(message, retMsg, parse_mode = "MarkDown")
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
 
 # -------------- /delexp ------------------------
 
@@ -356,6 +409,72 @@ def delExpense(message):
         except:
             return bot.reply_to(message, "No expense found!\nTry using /viewexp to get the expense number.")
     except:
-        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me."))
- 
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
+
+# -------------- /note ------------------------
+
+@bot.message_handler(commands = ["note"])
+def addNotes(message):
+    try:
+        try:
+            msg = message.text.split("/note ")[1]
+        except:
+            return bot.reply_to(message,("Hey Buddy,"
+            "\nTry using `/note {detail}` to add a note."),
+            parse_mode = "MarkDown")
+        users_collection.update_one({"_id": message.from_user.id}, {"$push":{"notes": msg}})
+        return bot.reply_to(message, "Notes list has been updated.\nUse /viewnotes to see the list.")
+    except:
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
+
+# -------------- /viewnotes ------------------------
+
+@bot.message_handler(commands = ["viewnotes"])
+def viewNotes(message):
+    try:
+        notes = users_collection.find_one({"_id": message.from_user.id}, {"_id":0, "notes":1})
+        notes = notes["notes"]
+        retMsg, i = "Here are your notes,\n", 1
+        if notes == []:
+            return bot.reply_to(message, ("Notes list is empty!\nUse /note to add notes."))
+        for note in notes:
+            retMsg += (f"*{i}*. {note}\n")
+            i += 1
+        return bot.reply_to(message, retMsg, parse_mode = "MarkDown")
+    except:
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
+
+# -------------- /delnote ------------------------
+
+@bot.message_handler(commands = ["delnote"])
+def delNote(message):
+    try:
+        try:
+            num = int(message.text.split("/delnote ")[1])
+        except:
+            return bot.reply_to(message, ("Kindly use,\n`/delnote {note number}` to delete a note."
+                                        "\nUse /viewnotes to know the note number."), parse_mode = "MarkDown")
+        user_notes = users_collection.find_one({"_id" : message.from_user.id},{"_id": 0,"notes": 1})
+        user_notes = user_notes["notes"]
+        try:
+            delnote = user_notes.pop(num - 1)
+            users_collection.update_one({"_id":message.from_user.id},{"$set":{"notes": user_notes}})
+            return bot.reply_to(message, f"*{delnote}* has been removed from the Notes list.", parse_mode = "MarkDown")
+        except:
+            return bot.reply_to(message, "No note found in the given value.\nPlease use /viewnotes to know the number.")
+    except:
+        return bot.reply_to(message,(f"Sorry for the inconvenience, Something is not good in me.\n"
+                                    "Trying /reset might help.\n"
+                                    "*BUT REMEMBER:* _Reset will erase all your data (plans, expenses, notes)_"), 
+                                    parse_mode = "MarkDown")
+
 bot.infinity_polling()
