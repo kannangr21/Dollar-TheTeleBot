@@ -29,8 +29,8 @@ https://t.me/Dollar_thebot
  Data might not be stored in the database correctly if the format is not followed properly.  
  The format for respective commands are given in the `/help` command.**
  ***
-### <u>**Issues:**</u>
+### <u>**Troubleshooting:**</u>
 
 - Try `/reset` command once.
-- Still issue persists, raise an issue [here](https://github.com/kannangr21/Dollar-TheTeleBot/issues). 
-- Or, Contact details have been shared in `/help` command.
+- If issue still persists, raise an issue [here](https://github.com/kannangr21/Dollar-TheTeleBot/issues). 
+- Contact details can be found in bot's `/help` command.
