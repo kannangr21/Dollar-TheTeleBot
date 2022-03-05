@@ -10,12 +10,6 @@ Dollar is a Telegram bot that simply maintains expenses and also can be used to 
 - *Database* &nbsp;&nbsp; : MongoDB Atlas
 
 ***
-### <u>**How to Start:**</u>
-
-To start with, add Dollar to your chat list in telegram by clicking the following link,  
-https://t.me/Dollar_thebot
-
-***
 ### <u>**Working:**</u>
 
  - `/start` plays a vital role in creating a collection with user telegram user id as a key.  
